@@ -3,6 +3,65 @@ import {
     FilesetResolver
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 
+const canvas = document.getElementById("paintCanvas");
+const ctx = canvas.getContext("2d");
+const cursorCanvas = document.getElementById("cursorCanvas");
+const cursorCtx = cursorCanvas.getContext("2d");
+
+const container = document.getElementById("canvasContainer");
+
+canvas.width = container.clientWidth;
+canvas.height = container.clientHeight;
+
+cursorCanvas.width = container.clientWidth;
+cursorCanvas.height = container.clientHeight;
+
+let isDrawing = false;
+
+let brushColor = "#000000";
+let brushSize = 5;
+
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
+
+//draw function
+function draw(x, y) {
+
+    if (!isDrawing) return;
+
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+}
+
+// show cursor
+function drawCursor(x, y) {
+
+    cursorCtx.clearRect(
+        0,
+        0,
+        cursorCanvas.width,
+        cursorCanvas.height
+    );
+
+    cursorCtx.beginPath();
+
+    cursorCtx.arc(
+        x,
+        y,
+        10,
+        0,
+        Math.PI * 2
+    );
+
+    cursorCtx.fillStyle = "red";
+    cursorCtx.fill();
+
+}
+
 async function main() {
 
     // webcam
@@ -32,6 +91,10 @@ async function main() {
         }
     );
 
+    // GESTURES
+
+
+
     // frame detection for fingertip
     function detectHands() {
 
@@ -42,10 +105,12 @@ async function main() {
 
         if (results.landmarks.length > 0) {
 
-            const finger = results.landmarks[0][8];
+            const landmarks = results.landmarks[0];
 
-            const x = (1 - finger.x) * canvas.width;
-            const y = finger.y * canvas.height;
+            const index = landmarks[8];
+
+            const x = (1 - index.x) * canvas.width;
+            const y = index.y * canvas.height;
 
             // show cursor
             cursorCtx.clearRect(
@@ -78,29 +143,6 @@ async function main() {
 
 main();
 
-
-
-const canvas = document.getElementById("paintCanvas");
-const ctx = canvas.getContext("2d");
-const cursorCanvas = document.getElementById("cursorCanvas");
-const cursorCtx = cursorCanvas.getContext("2d");
-
-const container = document.getElementById("canvasContainer");
-
-canvas.width = container.clientWidth;
-canvas.height = container.clientHeight;
-
-cursorCanvas.width = container.clientWidth;
-cursorCanvas.height = container.clientHeight;
-
-let isDrawing = false;
-
-let brushColor = "#000000";
-let brushSize = 5;
-
-ctx.lineCap = "round";
-ctx.lineJoin = "round";
-
 canvas.addEventListener("mousedown", (event) => {
 
     isDrawing = true;
@@ -113,13 +155,7 @@ canvas.addEventListener("mousedown", (event) => {
 
 canvas.addEventListener("mousemove", (event) => {
 
-    if (!isDrawing) return;
-
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-
-    ctx.lineTo(event.offsetX, event.offsetY);
-    ctx.stroke();
+    draw(event.offsetX, event.offsetY);
 
 });
 
@@ -169,3 +205,5 @@ brushSlider.addEventListener("input", () => {
     brushSize = brushSlider.value;
 
 });
+
+
